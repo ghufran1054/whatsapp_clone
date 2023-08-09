@@ -1,15 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:whatsapp_clone/models/user.dart';
+import 'package:whatsapp_clone/routes/route_manager.dart';
 import 'package:whatsapp_clone/widgets/button.dart';
 import 'package:country_picker/country_picker.dart';
+import 'package:whatsapp_clone/widgets/snackbar.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final phoneController = TextEditingController();
   Function? setCodeState;
   Country? country;
@@ -121,7 +125,20 @@ class _LoginScreenState extends State<LoginScreen> {
                 SizedBox(
                   width: 150,
                   child: MyButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      if (country == null) {
+                        showSnackbar(context, 'Please select a country');
+                        return;
+                      } else if (phoneController.text.isEmpty) {
+                        showSnackbar(context, 'Please enter a phone number');
+                        return;
+                      }
+                      ref.read(userProvider.notifier).state = User(
+                          phone:
+                              '${country!.phoneCode}${phoneController.text}');
+                      Navigator.pushNamedAndRemoveUntil(
+                          context, RouteManger.addInfoScreen, (route) => false);
+                    },
                     content: 'OK',
                   ),
                 )

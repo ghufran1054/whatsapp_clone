@@ -26,7 +26,7 @@ class _HomeScreenState extends State<HomeScreen>
               SliverAppBar(
                 snap: true,
                 pinned: true,
-                //forceElevated: true,
+                forceElevated: true,
                 floating: true,
                 flexibleSpace: Row(children: [
                   Padding(

@@ -21,9 +21,9 @@ class HomeScreenTabs extends StatelessWidget {
           tabs: [
             Container(
               width: smallTabWidht,
-              alignment: Alignment.centerLeft,
+              alignment: Alignment.center,
               child: const Tab(
-                child: Icon(
+                icon: Icon(
                   Icons.groups_2,
                 ),
               ),

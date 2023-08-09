@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.light,
+      themeMode: ThemeMode.dark,
       home: const LandingScreen(),
       onGenerateRoute: RouteManger.generateRoute,
       initialRoute: RouteManger.initialRoute,
