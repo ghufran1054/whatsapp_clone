@@ -1,27 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:whatsapp_clone/db_models/user_model.dart';
 import 'package:whatsapp_clone/routes/route_manager.dart';
 import 'package:whatsapp_clone/theme.dart';
-import 'screens/landing_screen.dart';
+import 'services/init_services.dart';
+import 'models/loaded_settings.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  final provider = ProviderContainer();
+  await provider.read(initServicesProvider).init();
+  runApp(UncontrolledProviderScope(
+    container: provider,
+    child: const MyApp(),
+  ));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    FlutterNativeSplash.remove();
+    final settingProv = ref.watch(loadedSettingsStateProvider);
+    final userProv = ref.watch(userProvider);
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.dark,
-      home: const LandingScreen(),
+      themeMode: settingProv.themeMode ?? ThemeMode.system,
       onGenerateRoute: RouteManger.generateRoute,
-      initialRoute: RouteManger.initialRoute,
+      initialRoute: userProv == null || userProv.token == null
+          ? RouteManger.landingScreen
+          : RouteManger.homeScreen,
     );
   }
 }

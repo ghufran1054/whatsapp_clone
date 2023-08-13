@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/routes/route_manager.dart';
-import 'package:whatsapp_clone/widgets/button.dart';
+
+import '../routes/route_manager.dart';
+import '../widgets/button.dart';
 
 class LandingScreen extends StatelessWidget {
   const LandingScreen({super.key});

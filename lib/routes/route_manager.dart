@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/screens/add_info_screen.dart';
-import 'package:whatsapp_clone/screens/homeScreen/home_screen.dart';
-
+import '../screens/add_info_screen.dart';
+import '../screens/homeScreen/home_screen.dart';
 import '../screens/landing_screen.dart';
 import '../screens/login_screen.dart';
+import '../screens/otp_screen.dart';
 
 class RouteManger {
   static const initialRoute = '/';
@@ -11,6 +11,7 @@ class RouteManger {
   static const String loginScreen = '/login';
   static const String homeScreen = '/homeSreen';
   static const String addInfoScreen = '/addInfoScreen';
+  static const String otpScreen = '/otpScreen';
 
   //Route handler static function
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -23,6 +24,8 @@ class RouteManger {
         return MaterialPageRoute(builder: (_) => const HomeScreen());
       case addInfoScreen:
         return MaterialPageRoute(builder: (_) => const AddInfoScreen());
+      case otpScreen:
+        return MaterialPageRoute(builder: (_) => const OtpScreen());
       default:
         return MaterialPageRoute(
             builder: (_) => Scaffold(

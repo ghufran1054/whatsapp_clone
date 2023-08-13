@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:whatsapp_clone/models/user.dart';
-import 'package:whatsapp_clone/widgets/button.dart';
 
-//TODO: Add a OTP screen before this
+import '../db_models/user_model.dart';
+import '../repositories/local_db_repository.dart';
+import '../routes/route_manager.dart';
+import '../services/api_services.dart';
+import '../utils/constants.dart';
+import '../widgets/button.dart';
+import '../widgets/snackbar.dart';
+
 class AddInfoScreen extends ConsumerStatefulWidget {
   const AddInfoScreen({super.key});
 
@@ -14,6 +19,25 @@ class AddInfoScreen extends ConsumerStatefulWidget {
 class _AddInfoScreenState extends ConsumerState<AddInfoScreen> {
   final nameController = TextEditingController();
   final aboutController = TextEditingController();
+
+  void handleSubmit(WidgetRef ref) async {
+    final navigator = Navigator.of(context);
+    ref.read(userProvider.notifier).update((oldUser) => oldUser!.copyWith(
+          name: nameController.text,
+          about: aboutController.text,
+        ));
+    final response = await ref.read(apiServiceProvider).postReq(
+        url: '$baseUrl/auth/sign-up', body: ref.read(userProvider)!.toMap());
+    if (response.message != null) {
+      // ignore: use_build_context_synchronously
+      showSnackbar(context, response.message!);
+      return;
+    }
+    UserModel user = UserModel.fromMap(response.data);
+    ref.read(userProvider.notifier).state = user;
+    await ref.read(localDbRepositoryProvider).saveLoggedInUser(user);
+    navigator.pushNamedAndRemoveUntil(RouteManger.homeScreen, (route) => false);
+  }
 
   @override
   void dispose() {
@@ -81,16 +105,7 @@ class _AddInfoScreenState extends ConsumerState<AddInfoScreen> {
                   ),
                 ),
                 const Spacer(),
-                MyButton(
-                    content: 'OK',
-                    onPressed: () {
-                      ref
-                          .read(userProvider.notifier)
-                          .update((oldUser) => oldUser!.copyWith(
-                                name: nameController.text,
-                                about: aboutController.text,
-                              ));
-                    }),
+                MyButton(content: 'OK', onPressed: () => handleSubmit(ref)),
               ],
             ),
           ),

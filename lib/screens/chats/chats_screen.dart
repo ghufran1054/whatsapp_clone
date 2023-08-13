@@ -8,21 +8,25 @@ class ChatScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: 20,
-      itemBuilder: (context, index) {
-        return ChatTile(
-          image: "${dummyData[index]['image']}}",
-          name:
-              "${dummyData[index]['firstName']} ${dummyData[index]['lastName']}",
-          messageCount: Random().nextInt(2),
-          lastMessage:
-              'Hello Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-          time: '12:00 PM',
-          isMuted: Random().nextBool(),
-        );
-      },
-    );
+    return Column(children: [
+      Expanded(
+        child: ListView.builder(
+          itemCount: 20,
+          itemBuilder: (context, index) {
+            return ChatTile(
+              image: "${dummyData[index]['image']}}",
+              name:
+                  "${dummyData[index]['firstName']} ${dummyData[index]['lastName']}",
+              messageCount: Random().nextInt(2),
+              lastMessage:
+                  'Hello Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+              time: '12:00 PM',
+              isMuted: Random().nextBool(),
+            );
+          },
+        ),
+      ),
+    ]);
   }
 }
 
@@ -54,18 +58,15 @@ class ChatTile extends StatelessWidget {
           ),
           //backgroundColor: Colors.grey,
         ),
-        title: Expanded(
-          child: Text(
-            name,
-            style: const TextStyle(fontWeight: FontWeight.w600),
-            overflow: TextOverflow.ellipsis,
-          ),
+        title: Text(
+          name,
+          style: const TextStyle(fontWeight: FontWeight.w600),
+          overflow: TextOverflow.ellipsis,
         ),
-        subtitle: Expanded(
-            child: Text(
+        subtitle: Text(
           lastMessage,
           overflow: TextOverflow.ellipsis,
-        )),
+        ),
         trailing: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

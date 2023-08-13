@@ -1,6 +1,16 @@
 const app = require('express')()
 require('dotenv').config()
 const mongoose = require('mongoose')
+const authRouter = require('./routes/auth')
+const bodyParser = require('body-parser')
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
+
+app.use('/auth', authRouter)
+app.get('/', async (req, res) => {
+    res.send('Welcome to the server');
+})
+
 const PORT = process.env.PORT || 3000
 const MONGO_URL = process.env.MONGO_URL
 

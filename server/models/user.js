@@ -12,6 +12,9 @@ const userSchema = new Schema({
     phone:{
         type: String,
         required: true,
+    },
+    profilePicUrl:{
+        type: String
     }
 });
 const User = mongoose.model('User', userSchema);

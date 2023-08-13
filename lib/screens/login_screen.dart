@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:whatsapp_clone/models/user.dart';
-import 'package:whatsapp_clone/routes/route_manager.dart';
-import 'package:whatsapp_clone/widgets/button.dart';
 import 'package:country_picker/country_picker.dart';
-import 'package:whatsapp_clone/widgets/snackbar.dart';
+import 'package:whatsapp_clone/services/api_services.dart';
+
+import '../db_models/user_model.dart';
+import '../routes/route_manager.dart';
+import '../utils/constants.dart';
+import '../widgets/button.dart';
+import '../widgets/snackbar.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -22,6 +25,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() {
       this.country = country;
     });
+  }
+
+  void handleLogin(BuildContext context) async {
+    final navigator = Navigator.of(context);
+    if (country == null) {
+      showSnackbar(context, 'Please select a country');
+      return;
+    } else if (phoneController.text.isEmpty) {
+      showSnackbar(context, 'Please enter a phone number');
+      return;
+    }
+    ref.read(userProvider.notifier).state =
+        UserModel(phone: '+${country!.phoneCode}${phoneController.text}');
+
+    final response = await ref
+        .read(apiServiceProvider)
+        .postReq(url: '$baseUrl/auth/request-otp', body: {
+      'phone': ref.read(userProvider.notifier).state!.phone,
+    });
+    if (response.message != null) {
+      // ignore: use_build_context_synchronously
+      showSnackbar(context, response.message!);
+      return;
+    }
+    navigator.pushNamed(RouteManger.otpScreen);
   }
 
   @override
@@ -125,20 +153,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 SizedBox(
                   width: 150,
                   child: MyButton(
-                    onPressed: () {
-                      if (country == null) {
-                        showSnackbar(context, 'Please select a country');
-                        return;
-                      } else if (phoneController.text.isEmpty) {
-                        showSnackbar(context, 'Please enter a phone number');
-                        return;
-                      }
-                      ref.read(userProvider.notifier).state = User(
-                          phone:
-                              '${country!.phoneCode}${phoneController.text}');
-                      Navigator.pushNamedAndRemoveUntil(
-                          context, RouteManger.addInfoScreen, (route) => false);
-                    },
+                    onPressed: () => handleLogin(context),
                     content: 'OK',
                   ),
                 )
