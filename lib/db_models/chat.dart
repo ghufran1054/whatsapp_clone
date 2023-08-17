@@ -14,6 +14,9 @@ class Chat {
   final Id id = Isar.autoIncrement;
   final String? _id;
   final bool? isGroup;
+  final int? unreadCount;
+  final String? lastMessageString;
+  final String? lastMessageTime;
   String? get mId => _id;
 
   //This will be non-null only if the chat is a group
@@ -21,50 +24,35 @@ class Chat {
 
   //The Data of the single user, if the chat is not a group
   final userData = IsarLink<ChatUser>();
-
   final members = IsarLinks<ChatUser>();
   final admins = IsarLinks<ChatUser>();
 
   Chat({
     String? mId,
+    this.unreadCount,
     this.isGroup,
     this.groupData,
+    this.lastMessageString,
+    this.lastMessageTime,
   }) : _id = mId;
 
   Chat copyWith({
     String? mId,
     bool? isGroup,
     GroupData? groupData,
+    int? unreadCount,
+    String? lastMessageString,
+    String? lastMessageTime,
   }) {
     return Chat(
       mId: mId ?? _id,
       isGroup: isGroup ?? this.isGroup,
       groupData: groupData ?? this.groupData,
+      unreadCount: unreadCount ?? this.unreadCount,
+      lastMessageString: lastMessageString ?? this.lastMessageString,
+      lastMessageTime: lastMessageTime ?? this.lastMessageTime,
     );
   }
-
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      '_id': _id,
-      'isGroup': isGroup,
-      'groupData': groupData?.toMap(),
-    };
-  }
-
-  factory Chat.fromMap(Map<String, dynamic> map) {
-    return Chat(
-      mId: map['_id'] != null ? map['_id'] as String : null,
-      isGroup: map['isGroup'] != null ? map['isGroup'] as bool : null,
-      groupData: map['groupData'] != null
-          ? GroupData.fromMap(map['groupData'] as Map<String, dynamic>)
-          : null,
-    );
-  }
-
-  String toJson() => json.encode(toMap());
-
-  factory Chat.fromJson(String source) =>
-      Chat.fromMap(json.decode(source) as Map<String, dynamic>);
 }
 
 @embedded

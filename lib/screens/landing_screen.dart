@@ -12,6 +12,7 @@ class LandingScreen extends StatelessWidget {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             height: MediaQuery.sizeOf(context).height,
             alignment: Alignment.center,
             child: Column(

@@ -4,9 +4,9 @@ const primaryColor = Color.fromRGBO(0, 167, 131, 1);
 final unselectedColor = Colors.white.withOpacity(0.6);
 final darkTheme = ThemeData.dark().copyWith(
   scaffoldBackgroundColor: const Color.fromRGBO(19, 28, 33, 1),
-  appBarTheme: AppBarTheme(
-    backgroundColor: const Color.fromRGBO(31, 44, 52, 1),
-    foregroundColor: Colors.grey[400],
+  appBarTheme: const AppBarTheme(
+    backgroundColor: Color.fromRGBO(31, 44, 52, 1),
+    foregroundColor: Colors.white,
   ),
   tabBarTheme: TabBarTheme(
       labelColor: primaryColor,
@@ -19,6 +19,7 @@ final darkTheme = ThemeData.dark().copyWith(
         insets: EdgeInsets.symmetric(horizontal: 16.0),
       )),
   colorScheme: ColorScheme.fromSeed(
+      onSecondaryContainer: const Color.fromRGBO(31, 44, 52, 1),
       brightness: Brightness.dark,
       inversePrimary: Colors.white,
       seedColor: const Color.fromRGBO(31, 44, 52, 1),
@@ -43,6 +44,7 @@ final lightTheme = ThemeData.light().copyWith(
           insets: EdgeInsets.symmetric(horizontal: 16.0),
         )),
     colorScheme: ColorScheme.fromSeed(
+        onSecondaryContainer: Colors.white,
         seedColor: const Color.fromRGBO(31, 44, 52, 1),
         inversePrimary: Colors.black,
         primary: primaryColor,

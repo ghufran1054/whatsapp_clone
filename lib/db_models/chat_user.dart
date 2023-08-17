@@ -18,6 +18,7 @@ class ChatUser {
   final String? about;
   const ChatUser({
     String? mId,
+    Id? id,
     this.name,
     this.savedName,
     this.phone,
@@ -27,6 +28,7 @@ class ChatUser {
   String? get mId => _id;
 
   ChatUser copyWith({
+    Id? id,
     String? mId,
     String? name,
     String? savedName,
@@ -35,6 +37,7 @@ class ChatUser {
     String? about,
   }) {
     return ChatUser(
+      id: id ?? this.id,
       mId: mId ?? _id,
       name: name ?? this.name,
       savedName: savedName ?? this.savedName,

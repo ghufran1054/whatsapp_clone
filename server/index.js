@@ -1,12 +1,18 @@
 const app = require('express')()
 require('dotenv').config()
 const mongoose = require('mongoose')
-const authRouter = require('./routes/auth')
 const bodyParser = require('body-parser')
+const authRouter = require('./routes/auth')
+const userRouter = require('./routes/user')
+const server = require('http').Server(app)
+const socketIo = require('socket.io')
+const io = socketIo(server)
+
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 
 app.use('/auth', authRouter)
+app.use('/user', userRouter)
 app.get('/', async (req, res) => {
     res.send('Welcome to the server');
 })
@@ -20,9 +26,14 @@ db = mongoose.connection;
 db.on('error', console.error.bind(console, 'connection error:'));
 db.once('open', () => console.log('Connected to MongoDB'));
 
+io.on('connection', (socket) => {
+    console.log('a user connected');
+    socket.on('disconnect', () => {
+        console.log('user disconnected')
+    })
+});
 
-
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}.`)
 })
 

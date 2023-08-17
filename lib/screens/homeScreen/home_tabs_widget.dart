@@ -18,9 +18,10 @@ class HomeScreenTabs extends StatelessWidget {
             fontSize: 15,
             fontWeight: FontWeight.w400,
           ),
+          indicatorSize: TabBarIndicatorSize.tab,
           tabs: [
             Container(
-              width: smallTabWidht,
+              //width: smallTabWidht,
               alignment: Alignment.center,
               child: const Tab(
                 icon: Icon(

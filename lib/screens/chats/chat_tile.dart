@@ -1,63 +1,29 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/screens/chats/dummydata.dart';
-
-class ChatScreen extends StatelessWidget {
-  const ChatScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(children: [
-      Expanded(
-        child: ListView.builder(
-          itemCount: 20,
-          itemBuilder: (context, index) {
-            return ChatTile(
-              image: "${dummyData[index]['image']}}",
-              name:
-                  "${dummyData[index]['firstName']} ${dummyData[index]['lastName']}",
-              messageCount: Random().nextInt(2),
-              lastMessage:
-                  'Hello Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-              time: '12:00 PM',
-              isMuted: Random().nextBool(),
-            );
-          },
-        ),
-      ),
-    ]);
-  }
-}
 
 class ChatTile extends StatelessWidget {
   const ChatTile({
     super.key,
-    required this.image,
+    this.image,
     required this.name,
     required this.messageCount,
     required this.lastMessage,
     required this.time,
+    required this.onTap,
     this.isMuted = false,
   });
-  final String image;
+  final String? image;
   final String name;
   final int messageCount;
   final String lastMessage;
   final String time;
   final bool isMuted;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return ListTile(
-        onTap: () {},
-        leading: CircleAvatar(
-          radius: 25,
-          backgroundImage: NetworkImage(
-            image,
-          ),
-          //backgroundColor: Colors.grey,
-        ),
+        onTap: onTap,
+        leading: CircularPhoto(radius: 25, image: image),
         title: Text(
           name,
           style: const TextStyle(fontWeight: FontWeight.w600),
@@ -109,5 +75,29 @@ class ChatTile extends StatelessWidget {
             )
           ],
         ));
+  }
+}
+
+class CircularPhoto extends StatelessWidget {
+  const CircularPhoto({
+    super.key,
+    required this.image,
+    required this.radius,
+  });
+
+  final String? image;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    return CircleAvatar(
+      radius: radius,
+      backgroundImage: image == null
+          ? Image.asset('assets/dummy_profile.png').image
+          : NetworkImage(
+              image ?? '',
+            ),
+      //backgroundColor: Colors.grey,
+    );
   }
 }

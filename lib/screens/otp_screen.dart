@@ -39,13 +39,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
   void onChange(String value) async {
     if (value.length != 6) return;
     final navigator = Navigator.of(context);
-
+    final apiProv = ref.read(apiServiceProvider);
     setLoaderState?.call(() {
       isLoading = true;
     });
-    final response = await ref
-        .read(apiServiceProvider)
-        .postReq(url: '$baseUrl/auth/verify-otp', body: {
+    final response =
+        await apiProv.postReq(url: '$baseUrl/auth/verify-otp', body: {
       'phone': ref.read(userProvider.notifier).state!.phone,
       'otp': value,
     });
@@ -54,15 +53,25 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       showSnackbar(context, response.message!);
       return;
     }
-    ref.read(userProvider.notifier).state = UserModel.fromMap(response.data);
+    if (response.data['next'] == 'login') {
+      final response =
+          await apiProv.postReq(body: {}, url: '$baseUrl/auth/login');
+      if (response.message != null) {
+        // ignore: use_build_context_synchronously
+        showSnackbar(context, response.message!);
+        return;
+      }
+
+      ref.read(userProvider.notifier).state = UserModel.fromMap(response.data);
+      navigator.pushNamedAndRemoveUntil(
+          RouteManger.homeScreen, (route) => false);
+    }
     setLoaderState?.call(() {
       isLoading = false;
     });
-    response.data['next'] == 'sign-up'
-        ? navigator.pushNamedAndRemoveUntil(
-            RouteManger.addInfoScreen, (route) => false)
-        : navigator.pushNamedAndRemoveUntil(
-            RouteManger.homeScreen, (route) => false);
+
+    navigator.pushNamedAndRemoveUntil(
+        RouteManger.addInfoScreen, (route) => false);
   }
 
   @override
