@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:country_picker/country_picker.dart';
 import 'package:whatsapp_clone/services/api_services.dart';
+import 'package:whatsapp_clone/utils/util_functions.dart';
 
 import '../db_models/user_model.dart';
 import '../routes/route_manager.dart';
@@ -85,7 +86,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       body: SingleChildScrollView(
         child: Container(
-            height: MediaQuery.sizeOf(context).height * 0.9,
+            height: context.height * 0.9,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
             alignment: Alignment.center,
             child: Column(

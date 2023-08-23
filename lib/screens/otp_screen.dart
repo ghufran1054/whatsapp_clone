@@ -2,8 +2,10 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:whatsapp_clone/repositories/local_db_repository.dart';
 import 'package:whatsapp_clone/routes/route_manager.dart';
 import 'package:whatsapp_clone/services/api_services.dart';
+import 'package:whatsapp_clone/utils/util_functions.dart';
 
 import '../db_models/user_model.dart';
 import '../utils/constants.dart';
@@ -54,8 +56,9 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       return;
     }
     if (response.data['next'] == 'login') {
-      final response =
-          await apiProv.postReq(body: {}, url: '$baseUrl/auth/login');
+      final response = await apiProv.postReq(body: {
+        'phone': ref.read(userProvider)?.phone,
+      }, url: '$baseUrl/auth/login');
       if (response.message != null) {
         // ignore: use_build_context_synchronously
         showSnackbar(context, response.message!);
@@ -63,8 +66,12 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       }
 
       ref.read(userProvider.notifier).state = UserModel.fromMap(response.data);
+      await ref
+          .read(localDbRepositoryProvider)
+          .saveLoggedInUser(ref.read(userProvider.notifier).state!);
       navigator.pushNamedAndRemoveUntil(
           RouteManger.homeScreen, (route) => false);
+      return;
     }
     setLoaderState?.call(() {
       isLoading = false;
@@ -114,7 +121,7 @@ class _OtpScreenState extends ConsumerState<OtpScreen> {
       ),
       body: Stack(children: [
         Container(
-            height: MediaQuery.sizeOf(context).height * 0.9,
+            height: context.height * 0.9,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
             alignment: Alignment.center,
             child: Column(

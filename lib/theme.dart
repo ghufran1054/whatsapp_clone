@@ -19,6 +19,7 @@ final darkTheme = ThemeData.dark().copyWith(
         insets: EdgeInsets.symmetric(horizontal: 16.0),
       )),
   colorScheme: ColorScheme.fromSeed(
+      onPrimaryContainer: const Color.fromRGBO(5, 96, 98, 1),
       onSecondaryContainer: const Color.fromRGBO(31, 44, 52, 1),
       brightness: Brightness.dark,
       inversePrimary: Colors.white,
@@ -44,6 +45,7 @@ final lightTheme = ThemeData.light().copyWith(
           insets: EdgeInsets.symmetric(horizontal: 16.0),
         )),
     colorScheme: ColorScheme.fromSeed(
+        onPrimaryContainer: const Color.fromARGB(255, 221, 255, 183),
         onSecondaryContainer: Colors.white,
         seedColor: const Color.fromRGBO(31, 44, 52, 1),
         inversePrimary: Colors.black,

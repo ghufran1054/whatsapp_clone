@@ -25,7 +25,7 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     FlutterNativeSplash.remove();
     final settingProv = ref.watch(loadedSettingsStateProvider);
-    final userProv = ref.watch(userProvider);
+    final userToken = ref.watch(userProvider.select((user) => user?.token));
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Flutter Demo',
@@ -33,7 +33,7 @@ class MyApp extends ConsumerWidget {
       darkTheme: darkTheme,
       themeMode: settingProv.themeMode ?? ThemeMode.system,
       onGenerateRoute: RouteManger.generateRoute,
-      initialRoute: userProv == null || userProv.token == null
+      initialRoute: userToken == null
           ? RouteManger.landingScreen
           : RouteManger.homeScreen,
     );

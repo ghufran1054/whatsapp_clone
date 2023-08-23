@@ -40,7 +40,8 @@ const UserModelSchema = CollectionSchema(
     r'profilePicUrl': PropertySchema(
       id: 4,
       name: r'profilePicUrl',
-      type: IsarType.string,
+      type: IsarType.object,
+      target: r'FilePath',
     ),
     r'token': PropertySchema(
       id: 5,
@@ -55,7 +56,7 @@ const UserModelSchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {},
-  embeddedSchemas: {},
+  embeddedSchemas: {r'FilePath': FilePathSchema},
   getId: _userModelGetId,
   getLinks: _userModelGetLinks,
   attach: _userModelAttach,
@@ -95,7 +96,8 @@ int _userModelEstimateSize(
   {
     final value = object.profilePicUrl;
     if (value != null) {
-      bytesCount += 3 + value.length * 3;
+      bytesCount += 3 +
+          FilePathSchema.estimateSize(value, allOffsets[FilePath]!, allOffsets);
     }
   }
   {
@@ -117,7 +119,12 @@ void _userModelSerialize(
   writer.writeString(offsets[1], object.mId);
   writer.writeString(offsets[2], object.name);
   writer.writeString(offsets[3], object.phone);
-  writer.writeString(offsets[4], object.profilePicUrl);
+  writer.writeObject<FilePath>(
+    offsets[4],
+    allOffsets,
+    FilePathSchema.serialize,
+    object.profilePicUrl,
+  );
   writer.writeString(offsets[5], object.token);
 }
 
@@ -132,7 +139,11 @@ UserModel _userModelDeserialize(
     mId: reader.readStringOrNull(offsets[1]),
     name: reader.readStringOrNull(offsets[2]),
     phone: reader.readStringOrNull(offsets[3]),
-    profilePicUrl: reader.readStringOrNull(offsets[4]),
+    profilePicUrl: reader.readObjectOrNull<FilePath>(
+      offsets[4],
+      FilePathSchema.deserialize,
+      allOffsets,
+    ),
     token: reader.readStringOrNull(offsets[5]),
   );
   return object;
@@ -154,7 +165,11 @@ P _userModelDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readObjectOrNull<FilePath>(
+        offset,
+        FilePathSchema.deserialize,
+        allOffsets,
+      )) as P;
     case 5:
       return (reader.readStringOrNull(offset)) as P;
     default:
@@ -906,142 +921,6 @@ extension UserModelQueryFilter
     });
   }
 
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'profilePicUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlContains(String value, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlMatches(String pattern, {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'profilePicUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'profilePicUrl',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterFilterCondition>
-      profilePicUrlIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'profilePicUrl',
-        value: '',
-      ));
-    });
-  }
-
   QueryBuilder<UserModel, UserModel, QAfterFilterCondition> tokenIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1190,7 +1069,14 @@ extension UserModelQueryFilter
 }
 
 extension UserModelQueryObject
-    on QueryBuilder<UserModel, UserModel, QFilterCondition> {}
+    on QueryBuilder<UserModel, UserModel, QFilterCondition> {
+  QueryBuilder<UserModel, UserModel, QAfterFilterCondition> profilePicUrl(
+      FilterQuery<FilePath> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'profilePicUrl');
+    });
+  }
+}
 
 extension UserModelQueryLinks
     on QueryBuilder<UserModel, UserModel, QFilterCondition> {}
@@ -1241,18 +1127,6 @@ extension UserModelQuerySortBy on QueryBuilder<UserModel, UserModel, QSortBy> {
   QueryBuilder<UserModel, UserModel, QAfterSortBy> sortByPhoneDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phone', Sort.desc);
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterSortBy> sortByProfilePicUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterSortBy> sortByProfilePicUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.desc);
     });
   }
 
@@ -1331,18 +1205,6 @@ extension UserModelQuerySortThenBy
     });
   }
 
-  QueryBuilder<UserModel, UserModel, QAfterSortBy> thenByProfilePicUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.asc);
-    });
-  }
-
-  QueryBuilder<UserModel, UserModel, QAfterSortBy> thenByProfilePicUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.desc);
-    });
-  }
-
   QueryBuilder<UserModel, UserModel, QAfterSortBy> thenByToken() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'token', Sort.asc);
@@ -1386,14 +1248,6 @@ extension UserModelQueryWhereDistinct
     });
   }
 
-  QueryBuilder<UserModel, UserModel, QDistinct> distinctByProfilePicUrl(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'profilePicUrl',
-          caseSensitive: caseSensitive);
-    });
-  }
-
   QueryBuilder<UserModel, UserModel, QDistinct> distinctByToken(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1434,7 +1288,7 @@ extension UserModelQueryProperty
     });
   }
 
-  QueryBuilder<UserModel, String?, QQueryOperations> profilePicUrlProperty() {
+  QueryBuilder<UserModel, FilePath?, QQueryOperations> profilePicUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'profilePicUrl');
     });

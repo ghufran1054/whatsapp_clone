@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:whatsapp_clone/utils/util_functions.dart';
 
 import '../routes/route_manager.dart';
 import '../widgets/button.dart';
@@ -13,7 +14,7 @@ class LandingScreen extends StatelessWidget {
         child: SingleChildScrollView(
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            height: MediaQuery.sizeOf(context).height,
+            height: context.height,
             alignment: Alignment.center,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -36,7 +37,7 @@ class LandingScreen extends StatelessWidget {
                         style: TextStyle(fontSize: 14)),
                     const SizedBox(height: 20),
                     SizedBox(
-                      width: MediaQuery.sizeOf(context).width * 0.8,
+                      width: context.width * 0.8,
                       child: MyButton(
                         content: 'AGREE AND CONTINUE',
                         onPressed: () {

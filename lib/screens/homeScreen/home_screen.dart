@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whatsapp_clone/models/loaded_settings.dart';
-import 'package:whatsapp_clone/screens/chats/all_chats_screen.dart';
+import 'package:whatsapp_clone/screens/chats_section/all_chats_screen.dart';
+import 'package:whatsapp_clone/utils/util_functions.dart';
 
 import '../../repositories/shared_pref_repo.dart';
 import '../../routes/route_manager.dart';
+import '../../services/socket_services.dart';
 import 'home_tabs_widget.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -30,8 +32,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
   }
 
   @override
+  void initState() {
+    super.initState();
+    final socketProvider = ref.read(socketServiceProvider);
+    socketProvider.connect();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
     return SafeArea(
       child: Scaffold(
           body: NestedScrollView(
@@ -78,7 +86,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                   ]),
                   automaticallyImplyLeading: false,
                   bottom: PreferredSize(
-                      preferredSize: Size(size.width, 50),
+                      preferredSize: Size(context.width, 50),
                       child: HomeScreenTabs(
                         tabController: controller,
                       )),

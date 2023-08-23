@@ -40,7 +40,8 @@ const ChatUserSchema = CollectionSchema(
     r'profilePicUrl': PropertySchema(
       id: 4,
       name: r'profilePicUrl',
-      type: IsarType.string,
+      type: IsarType.object,
+      target: r'FilePath',
     ),
     r'savedName': PropertySchema(
       id: 5,
@@ -55,7 +56,7 @@ const ChatUserSchema = CollectionSchema(
   idName: r'id',
   indexes: {},
   links: {},
-  embeddedSchemas: {},
+  embeddedSchemas: {r'FilePath': FilePathSchema},
   getId: _chatUserGetId,
   getLinks: _chatUserGetLinks,
   attach: _chatUserAttach,
@@ -95,7 +96,8 @@ int _chatUserEstimateSize(
   {
     final value = object.profilePicUrl;
     if (value != null) {
-      bytesCount += 3 + value.length * 3;
+      bytesCount += 3 +
+          FilePathSchema.estimateSize(value, allOffsets[FilePath]!, allOffsets);
     }
   }
   {
@@ -117,7 +119,12 @@ void _chatUserSerialize(
   writer.writeString(offsets[1], object.mId);
   writer.writeString(offsets[2], object.name);
   writer.writeString(offsets[3], object.phone);
-  writer.writeString(offsets[4], object.profilePicUrl);
+  writer.writeObject<FilePath>(
+    offsets[4],
+    allOffsets,
+    FilePathSchema.serialize,
+    object.profilePicUrl,
+  );
   writer.writeString(offsets[5], object.savedName);
 }
 
@@ -129,10 +136,15 @@ ChatUser _chatUserDeserialize(
 ) {
   final object = ChatUser(
     about: reader.readStringOrNull(offsets[0]),
+    id: id,
     mId: reader.readStringOrNull(offsets[1]),
     name: reader.readStringOrNull(offsets[2]),
     phone: reader.readStringOrNull(offsets[3]),
-    profilePicUrl: reader.readStringOrNull(offsets[4]),
+    profilePicUrl: reader.readObjectOrNull<FilePath>(
+      offsets[4],
+      FilePathSchema.deserialize,
+      allOffsets,
+    ),
     savedName: reader.readStringOrNull(offsets[5]),
   );
   return object;
@@ -154,7 +166,11 @@ P _chatUserDeserializeProp<P>(
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readObjectOrNull<FilePath>(
+        offset,
+        FilePathSchema.deserialize,
+        allOffsets,
+      )) as P;
     case 5:
       return (reader.readStringOrNull(offset)) as P;
     default:
@@ -903,140 +919,6 @@ extension ChatUserQueryFilter
     });
   }
 
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrlEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition>
-      profilePicUrlGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrlLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrlBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'profilePicUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition>
-      profilePicUrlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrlContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'profilePicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrlMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'profilePicUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition>
-      profilePicUrlIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'profilePicUrl',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition>
-      profilePicUrlIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'profilePicUrl',
-        value: '',
-      ));
-    });
-  }
-
   QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> savedNameIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -1186,7 +1068,14 @@ extension ChatUserQueryFilter
 }
 
 extension ChatUserQueryObject
-    on QueryBuilder<ChatUser, ChatUser, QFilterCondition> {}
+    on QueryBuilder<ChatUser, ChatUser, QFilterCondition> {
+  QueryBuilder<ChatUser, ChatUser, QAfterFilterCondition> profilePicUrl(
+      FilterQuery<FilePath> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'profilePicUrl');
+    });
+  }
+}
 
 extension ChatUserQueryLinks
     on QueryBuilder<ChatUser, ChatUser, QFilterCondition> {}
@@ -1237,18 +1126,6 @@ extension ChatUserQuerySortBy on QueryBuilder<ChatUser, ChatUser, QSortBy> {
   QueryBuilder<ChatUser, ChatUser, QAfterSortBy> sortByPhoneDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'phone', Sort.desc);
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterSortBy> sortByProfilePicUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterSortBy> sortByProfilePicUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.desc);
     });
   }
 
@@ -1327,18 +1204,6 @@ extension ChatUserQuerySortThenBy
     });
   }
 
-  QueryBuilder<ChatUser, ChatUser, QAfterSortBy> thenByProfilePicUrl() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.asc);
-    });
-  }
-
-  QueryBuilder<ChatUser, ChatUser, QAfterSortBy> thenByProfilePicUrlDesc() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'profilePicUrl', Sort.desc);
-    });
-  }
-
   QueryBuilder<ChatUser, ChatUser, QAfterSortBy> thenBySavedName() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'savedName', Sort.asc);
@@ -1382,14 +1247,6 @@ extension ChatUserQueryWhereDistinct
     });
   }
 
-  QueryBuilder<ChatUser, ChatUser, QDistinct> distinctByProfilePicUrl(
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'profilePicUrl',
-          caseSensitive: caseSensitive);
-    });
-  }
-
   QueryBuilder<ChatUser, ChatUser, QDistinct> distinctBySavedName(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -1430,7 +1287,7 @@ extension ChatUserQueryProperty
     });
   }
 
-  QueryBuilder<ChatUser, String?, QQueryOperations> profilePicUrlProperty() {
+  QueryBuilder<ChatUser, FilePath?, QQueryOperations> profilePicUrlProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'profilePicUrl');
     });

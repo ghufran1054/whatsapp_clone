@@ -1,37 +1,32 @@
-import 'dart:math';
+import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../models/chats_notifier.dart';
+import 'package:whatsapp_clone/providers/chat_providers.dart';
+import 'package:whatsapp_clone/utils/util_functions.dart';
+import '../../db_models/chat_user.dart';
+import '../../providers/chats_provider.dart';
+import '../../providers/messages_provider.dart';
+import '../../repositories/local_db_repository.dart';
+import '../../routes/route_manager.dart';
 import 'chat_tile.dart';
+import 'dart:math' as math;
 
 class AllChatsScreen extends ConsumerWidget {
   const AllChatsScreen({super.key});
 
-  String convertTime(int? hour) {
-    if (hour == null) {
-      return 'Error';
-    }
-    if (hour < 0 || hour > 23) {
-      throw Exception('Invalid hour');
-    }
-    String amPm = hour < 12 ? 'AM' : 'PM';
-    int hour12 = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-    return '$hour12 $amPm';
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final chats = ref.watch(chatsProvider);
+    final localDb = ref.read(localDbRepositoryProvider);
     return Column(children: [
       Expanded(
         child: ListView.builder(
-          itemCount: max(chats.length, 1),
+          itemCount: math.max(chats.length, 1),
           itemBuilder: (context, index) {
             if (chats.isEmpty) {
               return SizedBox(
-                height: MediaQuery.of(context).size.height * 0.8,
+                height: context.height * 0.8,
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -54,14 +49,19 @@ class AllChatsScreen extends ConsumerWidget {
               );
             }
             final chat = chats[index];
-            chat.userData.loadSync();
-
+            ChatUser chatUser = localDb.getUserSync(chat.chatUserId!)!;
             return ChatTile(
-              onTap: () {},
-              image: chats[index].userData.value!.profilePicUrl,
-              name: chat.userData.value!.savedName ??
-                  chat.userData.value!.phone ??
-                  'Error',
+              onTap: () async {
+                ref.read(selectedChatProvider.notifier).state = chat;
+                ref
+                    .read(messagesProvider.notifier)
+                    .fetchAndSetMessages(chat.mId);
+                await Navigator.pushNamed(context, RouteManger.chatScreen);
+                ref.read(selectedChatUserData.notifier).state = null;
+                log('exited chatScreen');
+              },
+              image: chatUser.profilePicUrl?.url,
+              name: chatUser.savedName ?? chatUser.phone ?? 'Error',
               messageCount: chat.unreadCount ?? 0,
               lastMessage: chat.lastMessageString ?? '',
               time: chat.lastMessageTime ?? '',

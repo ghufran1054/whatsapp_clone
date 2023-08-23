@@ -2,8 +2,10 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar/isar.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'file_path.dart';
 part 'user_model.g.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);
@@ -16,7 +18,7 @@ class UserModel {
   final String? name;
   final String? about;
   final String? phone;
-  final String? profilePicUrl;
+  final FilePath? profilePicUrl;
   final String? token;
   const UserModel({
     String? mId,
@@ -34,7 +36,7 @@ class UserModel {
     String? name,
     String? about,
     String? phone,
-    String? profilePicUrl,
+    FilePath? profilePicUrl,
     String? token,
   }) {
     return UserModel(
@@ -53,7 +55,7 @@ class UserModel {
       'name': name,
       'about': about,
       'phone': phone,
-      'profilePicUrl': profilePicUrl,
+      'profilePicUrl': profilePicUrl?.url,
       'token': token,
     };
   }
@@ -64,8 +66,9 @@ class UserModel {
       name: map['name'] != null ? map['name'] as String : null,
       about: map['about'] != null ? map['about'] as String : null,
       phone: map['phone'] != null ? map['phone'] as String : null,
-      profilePicUrl:
-          map['profilePicUrl'] != null ? map['profilePicUrl'] as String : null,
+      profilePicUrl: map['profilePicUrl'] != null
+          ? FilePath(url: map['profilePicUrl'] as String)
+          : null,
       token: map['token'] != null ? map['token'] as String : null,
     );
   }

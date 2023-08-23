@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:whatsapp_clone/screens/chats/chat_screen.dart';
+import 'package:whatsapp_clone/screens/individual_chat/chat_screen.dart';
 import 'package:whatsapp_clone/screens/contacts_screen.dart';
 import '../screens/add_info_screen.dart';
 import '../screens/homeScreen/home_screen.dart';

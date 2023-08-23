@@ -4,21 +4,24 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 
+import 'file_path.dart';
+
 part 'chat_user.g.dart';
 
 @collection
 @immutable
 class ChatUser {
-  final Id id = Isar.autoIncrement;
+  final Id id;
+  @Index(composite: [CompositeIndex('phone')])
   final String? _id;
   final String? name;
   final String? savedName;
   final String? phone;
-  final String? profilePicUrl;
+  final FilePath? profilePicUrl;
   final String? about;
   const ChatUser({
     String? mId,
-    Id? id,
+    this.id = Isar.autoIncrement,
     this.name,
     this.savedName,
     this.phone,
@@ -33,7 +36,7 @@ class ChatUser {
     String? name,
     String? savedName,
     String? phone,
-    String? profilePicUrl,
+    FilePath? profilePicUrl,
     String? about,
   }) {
     return ChatUser(
@@ -53,7 +56,7 @@ class ChatUser {
       'name': name,
       'savedName': savedName,
       'phone': phone,
-      'profilePicUrl': profilePicUrl,
+      'profilePicUrl': profilePicUrl?.url,
       'about': about,
     };
   }
@@ -64,9 +67,10 @@ class ChatUser {
       name: map['name'] != null ? map['name'] as String : null,
       savedName: map['savedName'] != null ? map['savedName'] as String : null,
       phone: map['phone'] != null ? map['phone'] as String : null,
-      profilePicUrl:
-          map['profilePicUrl'] != null ? map['profilePicUrl'] as String : null,
       about: map['about'] != null ? map['about'] as String : null,
+      profilePicUrl: map['profilePicUrl'] != null
+          ? FilePath(url: map['profilePicUrl'] as String)
+          : null,
     );
   }
 

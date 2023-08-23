@@ -17,34 +17,49 @@ const ChatSchema = CollectionSchema(
   name: r'Chat',
   id: -4292359458225261721,
   properties: {
-    r'groupData': PropertySchema(
+    r'chatUserId': PropertySchema(
       id: 0,
+      name: r'chatUserId',
+      type: IsarType.string,
+    ),
+    r'groupData': PropertySchema(
+      id: 1,
       name: r'groupData',
       type: IsarType.object,
       target: r'GroupData',
     ),
     r'isGroup': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'isGroup',
       type: IsarType.bool,
     ),
     r'lastMessageString': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'lastMessageString',
       type: IsarType.string,
     ),
     r'lastMessageTime': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'lastMessageTime',
       type: IsarType.string,
     ),
+    r'lastSeen': PropertySchema(
+      id: 5,
+      name: r'lastSeen',
+      type: IsarType.dateTime,
+    ),
     r'mId': PropertySchema(
-      id: 4,
+      id: 6,
       name: r'mId',
       type: IsarType.string,
     ),
+    r'members': PropertySchema(
+      id: 7,
+      name: r'members',
+      type: IsarType.stringList,
+    ),
     r'unreadCount': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'unreadCount',
       type: IsarType.long,
     )
@@ -54,28 +69,23 @@ const ChatSchema = CollectionSchema(
   deserialize: _chatDeserialize,
   deserializeProp: _chatDeserializeProp,
   idName: r'id',
-  indexes: {},
-  links: {
-    r'userData': LinkSchema(
-      id: 1389969831328284218,
-      name: r'userData',
-      target: r'ChatUser',
-      single: true,
-    ),
-    r'members': LinkSchema(
-      id: 8682260772211942133,
-      name: r'members',
-      target: r'ChatUser',
-      single: false,
-    ),
-    r'admins': LinkSchema(
-      id: 2806442717119823570,
-      name: r'admins',
-      target: r'ChatUser',
-      single: false,
+  indexes: {
+    r'mId': IndexSchema(
+      id: -2844146629571632746,
+      name: r'mId',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'mId',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
     )
   },
-  embeddedSchemas: {r'GroupData': GroupDataSchema},
+  links: {},
+  embeddedSchemas: {r'GroupData': GroupDataSchema, r'FilePath': FilePathSchema},
   getId: _chatGetId,
   getLinks: _chatGetLinks,
   attach: _chatAttach,
@@ -88,6 +98,12 @@ int _chatEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  {
+    final value = object.chatUserId;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   {
     final value = object.groupData;
     if (value != null) {
@@ -114,6 +130,13 @@ int _chatEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.members.length * 3;
+  {
+    for (var i = 0; i < object.members.length; i++) {
+      final value = object.members[i];
+      bytesCount += value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -123,17 +146,20 @@ void _chatSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
+  writer.writeString(offsets[0], object.chatUserId);
   writer.writeObject<GroupData>(
-    offsets[0],
+    offsets[1],
     allOffsets,
     GroupDataSchema.serialize,
     object.groupData,
   );
-  writer.writeBool(offsets[1], object.isGroup);
-  writer.writeString(offsets[2], object.lastMessageString);
-  writer.writeString(offsets[3], object.lastMessageTime);
-  writer.writeString(offsets[4], object.mId);
-  writer.writeLong(offsets[5], object.unreadCount);
+  writer.writeBool(offsets[2], object.isGroup);
+  writer.writeString(offsets[3], object.lastMessageString);
+  writer.writeString(offsets[4], object.lastMessageTime);
+  writer.writeDateTime(offsets[5], object.lastSeen);
+  writer.writeString(offsets[6], object.mId);
+  writer.writeStringList(offsets[7], object.members);
+  writer.writeLong(offsets[8], object.unreadCount);
 }
 
 Chat _chatDeserialize(
@@ -143,16 +169,20 @@ Chat _chatDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Chat(
+    chatUserId: reader.readStringOrNull(offsets[0]),
     groupData: reader.readObjectOrNull<GroupData>(
-      offsets[0],
+      offsets[1],
       GroupDataSchema.deserialize,
       allOffsets,
     ),
-    isGroup: reader.readBoolOrNull(offsets[1]),
-    lastMessageString: reader.readStringOrNull(offsets[2]),
-    lastMessageTime: reader.readStringOrNull(offsets[3]),
-    mId: reader.readStringOrNull(offsets[4]),
-    unreadCount: reader.readLongOrNull(offsets[5]),
+    id: id,
+    isGroup: reader.readBoolOrNull(offsets[2]),
+    lastMessageString: reader.readStringOrNull(offsets[3]),
+    lastMessageTime: reader.readStringOrNull(offsets[4]),
+    lastSeen: reader.readDateTimeOrNull(offsets[5]),
+    mId: reader.readStringOrNull(offsets[6]),
+    members: reader.readStringList(offsets[7]) ?? const [],
+    unreadCount: reader.readLongOrNull(offsets[8]),
   );
   return object;
 }
@@ -165,20 +195,26 @@ P _chatDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
+      return (reader.readStringOrNull(offset)) as P;
+    case 1:
       return (reader.readObjectOrNull<GroupData>(
         offset,
         GroupDataSchema.deserialize,
         allOffsets,
       )) as P;
-    case 1:
-      return (reader.readBoolOrNull(offset)) as P;
     case 2:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readBoolOrNull(offset)) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
+      return (reader.readDateTimeOrNull(offset)) as P;
+    case 6:
+      return (reader.readStringOrNull(offset)) as P;
+    case 7:
+      return (reader.readStringList(offset) ?? const []) as P;
+    case 8:
       return (reader.readLongOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -190,14 +226,10 @@ Id _chatGetId(Chat object) {
 }
 
 List<IsarLinkBase<dynamic>> _chatGetLinks(Chat object) {
-  return [object.userData, object.members, object.admins];
+  return [];
 }
 
-void _chatAttach(IsarCollection<dynamic> col, Id id, Chat object) {
-  object.userData.attach(col, col.isar.collection<ChatUser>(), r'userData', id);
-  object.members.attach(col, col.isar.collection<ChatUser>(), r'members', id);
-  object.admins.attach(col, col.isar.collection<ChatUser>(), r'admins', id);
-}
+void _chatAttach(IsarCollection<dynamic> col, Id id, Chat object) {}
 
 extension ChatQueryWhereSort on QueryBuilder<Chat, Chat, QWhere> {
   QueryBuilder<Chat, Chat, QAfterWhere> anyId() {
@@ -272,9 +304,218 @@ extension ChatQueryWhere on QueryBuilder<Chat, Chat, QWhereClause> {
       ));
     });
   }
+
+  QueryBuilder<Chat, Chat, QAfterWhereClause> mIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'mId',
+        value: [null],
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterWhereClause> mIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'mId',
+        lower: [null],
+        includeLower: false,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterWhereClause> mIdEqualTo(String? mId) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'mId',
+        value: [mId],
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterWhereClause> mIdNotEqualTo(String? mId) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mId',
+              lower: [],
+              upper: [mId],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mId',
+              lower: [mId],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mId',
+              lower: [mId],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'mId',
+              lower: [],
+              upper: [mId],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
 }
 
 extension ChatQueryFilter on QueryBuilder<Chat, Chat, QFilterCondition> {
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'chatUserId',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'chatUserId',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chatUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'chatUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'chatUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'chatUserId',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'chatUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'chatUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'chatUserId',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'chatUserId',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'chatUserId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> chatUserIdIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'chatUserId',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterFilterCondition> groupDataIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -661,6 +902,75 @@ extension ChatQueryFilter on QueryBuilder<Chat, Chat, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> lastSeenIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'lastSeen',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> lastSeenIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'lastSeen',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> lastSeenEqualTo(
+      DateTime? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'lastSeen',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> lastSeenGreaterThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'lastSeen',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> lastSeenLessThan(
+    DateTime? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'lastSeen',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> lastSeenBetween(
+    DateTime? lower,
+    DateTime? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'lastSeen',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterFilterCondition> mIdIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -805,6 +1115,220 @@ extension ChatQueryFilter on QueryBuilder<Chat, Chat, QFilterCondition> {
     });
   }
 
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'members',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'members',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'members',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'members',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'members',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'members',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementContains(
+      String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'members',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'members',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'members',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'members',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'members',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'members',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'members',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'members',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'members',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'members',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterFilterCondition> unreadCountIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -884,134 +1408,21 @@ extension ChatQueryObject on QueryBuilder<Chat, Chat, QFilterCondition> {
   }
 }
 
-extension ChatQueryLinks on QueryBuilder<Chat, Chat, QFilterCondition> {
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> userData(
-      FilterQuery<ChatUser> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.link(q, r'userData');
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> userDataIsNull() {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'userData', 0, true, 0, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> members(
-      FilterQuery<ChatUser> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.link(q, r'members');
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthEqualTo(
-      int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'members', length, true, length, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'members', 0, true, 0, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'members', 0, false, 999999, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'members', 0, true, length, include);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'members', length, include, 999999, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> membersLengthBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(
-          r'members', lower, includeLower, upper, includeUpper);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> admins(
-      FilterQuery<ChatUser> q) {
-    return QueryBuilder.apply(this, (query) {
-      return query.link(q, r'admins');
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> adminsLengthEqualTo(
-      int length) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'admins', length, true, length, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> adminsIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'admins', 0, true, 0, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> adminsIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'admins', 0, false, 999999, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> adminsLengthLessThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'admins', 0, true, length, include);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> adminsLengthGreaterThan(
-    int length, {
-    bool include = false,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(r'admins', length, include, 999999, true);
-    });
-  }
-
-  QueryBuilder<Chat, Chat, QAfterFilterCondition> adminsLengthBetween(
-    int lower,
-    int upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.linkLength(
-          r'admins', lower, includeLower, upper, includeUpper);
-    });
-  }
-}
+extension ChatQueryLinks on QueryBuilder<Chat, Chat, QFilterCondition> {}
 
 extension ChatQuerySortBy on QueryBuilder<Chat, Chat, QSortBy> {
+  QueryBuilder<Chat, Chat, QAfterSortBy> sortByChatUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chatUserId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterSortBy> sortByChatUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chatUserId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterSortBy> sortByIsGroup() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isGroup', Sort.asc);
@@ -1048,6 +1459,18 @@ extension ChatQuerySortBy on QueryBuilder<Chat, Chat, QSortBy> {
     });
   }
 
+  QueryBuilder<Chat, Chat, QAfterSortBy> sortByLastSeen() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSeen', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterSortBy> sortByLastSeenDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSeen', Sort.desc);
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterSortBy> sortByMId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mId', Sort.asc);
@@ -1074,6 +1497,18 @@ extension ChatQuerySortBy on QueryBuilder<Chat, Chat, QSortBy> {
 }
 
 extension ChatQuerySortThenBy on QueryBuilder<Chat, Chat, QSortThenBy> {
+  QueryBuilder<Chat, Chat, QAfterSortBy> thenByChatUserId() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chatUserId', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterSortBy> thenByChatUserIdDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'chatUserId', Sort.desc);
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -1122,6 +1557,18 @@ extension ChatQuerySortThenBy on QueryBuilder<Chat, Chat, QSortThenBy> {
     });
   }
 
+  QueryBuilder<Chat, Chat, QAfterSortBy> thenByLastSeen() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSeen', Sort.asc);
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QAfterSortBy> thenByLastSeenDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'lastSeen', Sort.desc);
+    });
+  }
+
   QueryBuilder<Chat, Chat, QAfterSortBy> thenByMId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'mId', Sort.asc);
@@ -1148,6 +1595,13 @@ extension ChatQuerySortThenBy on QueryBuilder<Chat, Chat, QSortThenBy> {
 }
 
 extension ChatQueryWhereDistinct on QueryBuilder<Chat, Chat, QDistinct> {
+  QueryBuilder<Chat, Chat, QDistinct> distinctByChatUserId(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'chatUserId', caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<Chat, Chat, QDistinct> distinctByIsGroup() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isGroup');
@@ -1170,10 +1624,22 @@ extension ChatQueryWhereDistinct on QueryBuilder<Chat, Chat, QDistinct> {
     });
   }
 
+  QueryBuilder<Chat, Chat, QDistinct> distinctByLastSeen() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'lastSeen');
+    });
+  }
+
   QueryBuilder<Chat, Chat, QDistinct> distinctByMId(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'mId', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<Chat, Chat, QDistinct> distinctByMembers() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'members');
     });
   }
 
@@ -1188,6 +1654,12 @@ extension ChatQueryProperty on QueryBuilder<Chat, Chat, QQueryProperty> {
   QueryBuilder<Chat, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<Chat, String?, QQueryOperations> chatUserIdProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'chatUserId');
     });
   }
 
@@ -1215,9 +1687,21 @@ extension ChatQueryProperty on QueryBuilder<Chat, Chat, QQueryProperty> {
     });
   }
 
+  QueryBuilder<Chat, DateTime?, QQueryOperations> lastSeenProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'lastSeen');
+    });
+  }
+
   QueryBuilder<Chat, String?, QQueryOperations> mIdProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'mId');
+    });
+  }
+
+  QueryBuilder<Chat, List<String>, QQueryOperations> membersProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'members');
     });
   }
 
@@ -1239,28 +1723,34 @@ const GroupDataSchema = Schema(
   name: r'GroupData',
   id: -6349230527047174052,
   properties: {
-    r'createdByUserId': PropertySchema(
+    r'admins': PropertySchema(
       id: 0,
+      name: r'admins',
+      type: IsarType.stringList,
+    ),
+    r'createdByUserId': PropertySchema(
+      id: 1,
       name: r'createdByUserId',
       type: IsarType.string,
     ),
     r'createdOn': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'createdOn',
       type: IsarType.dateTime,
     ),
     r'description': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'description',
       type: IsarType.string,
     ),
     r'groupPicUrl': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'groupPicUrl',
-      type: IsarType.string,
+      type: IsarType.object,
+      target: r'FilePath',
     ),
     r'name': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'name',
       type: IsarType.string,
     )
@@ -1277,6 +1767,13 @@ int _groupDataEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.admins.length * 3;
+  {
+    for (var i = 0; i < object.admins.length; i++) {
+      final value = object.admins[i];
+      bytesCount += value.length * 3;
+    }
+  }
   {
     final value = object.createdByUserId;
     if (value != null) {
@@ -1292,7 +1789,8 @@ int _groupDataEstimateSize(
   {
     final value = object.groupPicUrl;
     if (value != null) {
-      bytesCount += 3 + value.length * 3;
+      bytesCount += 3 +
+          FilePathSchema.estimateSize(value, allOffsets[FilePath]!, allOffsets);
     }
   }
   {
@@ -1310,11 +1808,17 @@ void _groupDataSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.createdByUserId);
-  writer.writeDateTime(offsets[1], object.createdOn);
-  writer.writeString(offsets[2], object.description);
-  writer.writeString(offsets[3], object.groupPicUrl);
-  writer.writeString(offsets[4], object.name);
+  writer.writeStringList(offsets[0], object.admins);
+  writer.writeString(offsets[1], object.createdByUserId);
+  writer.writeDateTime(offsets[2], object.createdOn);
+  writer.writeString(offsets[3], object.description);
+  writer.writeObject<FilePath>(
+    offsets[4],
+    allOffsets,
+    FilePathSchema.serialize,
+    object.groupPicUrl,
+  );
+  writer.writeString(offsets[5], object.name);
 }
 
 GroupData _groupDataDeserialize(
@@ -1324,11 +1828,16 @@ GroupData _groupDataDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = GroupData(
-    createdByUserId: reader.readStringOrNull(offsets[0]),
-    createdOn: reader.readDateTimeOrNull(offsets[1]),
-    description: reader.readStringOrNull(offsets[2]),
-    groupPicUrl: reader.readStringOrNull(offsets[3]),
-    name: reader.readStringOrNull(offsets[4]),
+    admins: reader.readStringList(offsets[0]) ?? const [],
+    createdByUserId: reader.readStringOrNull(offsets[1]),
+    createdOn: reader.readDateTimeOrNull(offsets[2]),
+    description: reader.readStringOrNull(offsets[3]),
+    groupPicUrl: reader.readObjectOrNull<FilePath>(
+      offsets[4],
+      FilePathSchema.deserialize,
+      allOffsets,
+    ),
+    name: reader.readStringOrNull(offsets[5]),
   );
   return object;
 }
@@ -1341,14 +1850,20 @@ P _groupDataDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readStringList(offset) ?? const []) as P;
     case 1:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 2:
       return (reader.readStringOrNull(offset)) as P;
+    case 2:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 3:
       return (reader.readStringOrNull(offset)) as P;
     case 4:
+      return (reader.readObjectOrNull<FilePath>(
+        offset,
+        FilePathSchema.deserialize,
+        allOffsets,
+      )) as P;
+    case 5:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -1357,6 +1872,228 @@ P _groupDataDeserializeProp<P>(
 
 extension GroupDataQueryFilter
     on QueryBuilder<GroupData, GroupData, QFilterCondition> {
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'admins',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'admins',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'admins',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'admins',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'admins',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'admins',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'admins',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'admins',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'admins',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsElementIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'admins',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> adminsLengthEqualTo(
+      int length) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'admins',
+        length,
+        true,
+        length,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> adminsIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'admins',
+        0,
+        true,
+        0,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> adminsIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'admins',
+        0,
+        false,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsLengthLessThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'admins',
+        0,
+        true,
+        length,
+        include,
+      );
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
+      adminsLengthGreaterThan(
+    int length, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'admins',
+        length,
+        include,
+        999999,
+        true,
+      );
+    });
+  }
+
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> adminsLengthBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.listLength(
+        r'admins',
+        lower,
+        includeLower,
+        upper,
+        includeUpper,
+      );
+    });
+  }
+
   QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
       createdByUserIdIsNull() {
     return QueryBuilder.apply(this, (query) {
@@ -1752,140 +2489,6 @@ extension GroupDataQueryFilter
     });
   }
 
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrlEqualTo(
-    String? value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'groupPicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
-      groupPicUrlGreaterThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'groupPicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrlLessThan(
-    String? value, {
-    bool include = false,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'groupPicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrlBetween(
-    String? lower,
-    String? upper, {
-    bool includeLower = true,
-    bool includeUpper = true,
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.between(
-        property: r'groupPicUrl',
-        lower: lower,
-        includeLower: includeLower,
-        upper: upper,
-        includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
-      groupPicUrlStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'groupPicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrlEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'groupPicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrlContains(
-      String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'groupPicUrl',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrlMatches(
-      String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'groupPicUrl',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
-      groupPicUrlIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'groupPicUrl',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<GroupData, GroupData, QAfterFilterCondition>
-      groupPicUrlIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'groupPicUrl',
-        value: '',
-      ));
-    });
-  }
-
   QueryBuilder<GroupData, GroupData, QAfterFilterCondition> nameIsNull() {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(const FilterCondition.isNull(
@@ -2034,4 +2637,11 @@ extension GroupDataQueryFilter
 }
 
 extension GroupDataQueryObject
-    on QueryBuilder<GroupData, GroupData, QFilterCondition> {}
+    on QueryBuilder<GroupData, GroupData, QFilterCondition> {
+  QueryBuilder<GroupData, GroupData, QAfterFilterCondition> groupPicUrl(
+      FilterQuery<FilePath> q) {
+    return QueryBuilder.apply(this, (query) {
+      return query.object(q, r'groupPicUrl');
+    });
+  }
+}

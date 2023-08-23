@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:whatsapp_clone/utils/util_functions.dart';
 
 import '../db_models/user_model.dart';
 import '../repositories/local_db_repository.dart';
@@ -57,7 +58,7 @@ class _AddInfoScreenState extends ConsumerState<AddInfoScreen> {
           primary: true,
           padding: const EdgeInsets.fromLTRB(20, 50, 20, 10),
           child: SizedBox(
-            height: MediaQuery.of(context).size.height * 0.8,
+            height: context.height * 0.8,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               crossAxisAlignment: CrossAxisAlignment.center,
